@@ -1,0 +1,47 @@
+[
+  {
+    "id": "1",
+    "name": "Alice Johnson",
+    "email": "alice@acmecorp.com",
+    "company": "Acme Corp",
+    "status": "Active",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice",
+    "totalDue": 1200.00
+  },
+  {
+    "id": "2",
+    "name": "Bob Smith",
+    "email": "bob@globex.com",
+    "company": "Globex Inc",
+    "status": "Inactive",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
+    "totalDue": 0.00
+  },
+  {
+    "id": "3",
+    "name": "Charlie Davis",
+    "email": "charlie@stark.com",
+    "company": "Stark Industries",
+    "status": "Active",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie",
+    "totalDue": 4500.50
+  },
+  {
+    "id": "4",
+    "name": "Diana Prince",
+    "email": "diana@themyscira.com",
+    "company": "Themyscira LLC",
+    "status": "Active",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Diana",
+    "totalDue": 850.00
+  },
+  {
+    "id": "5",
+    "name": "Ethan Hunt",
+    "email": "ethan@imf.gov",
+    "company": "IMF",
+    "status": "Active",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Ethan",
+    "totalDue": 0.00
+  }
+]

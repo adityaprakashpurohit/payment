@@ -1,0 +1,52 @@
+[
+  {
+    "id": "INV-1001",
+    "clientId": "1",
+    "clientName": "Alice Johnson",
+    "project": "Website Redesign",
+    "amount": 1200.00,
+    "status": "Pending",
+    "date": "2023-10-15",
+    "dueDate": "2023-11-15"
+  },
+  {
+    "id": "INV-1002",
+    "clientId": "3",
+    "clientName": "Charlie Davis",
+    "project": "Mobile App Development",
+    "amount": 4500.50,
+    "status": "Overdue",
+    "date": "2023-09-01",
+    "dueDate": "2023-09-30"
+  },
+  {
+    "id": "INV-1003",
+    "clientId": "4",
+    "clientName": "Diana Prince",
+    "project": "SEO Optimization",
+    "amount": 850.00,
+    "status": "Pending",
+    "date": "2023-10-20",
+    "dueDate": "2023-11-20"
+  },
+  {
+    "id": "INV-1004",
+    "clientId": "2",
+    "clientName": "Bob Smith",
+    "project": "Consulting",
+    "amount": 500.00,
+    "status": "Paid",
+    "date": "2023-10-01",
+    "dueDate": "2023-10-10"
+  },
+  {
+    "id": "INV-1005",
+    "clientId": "5",
+    "clientName": "Ethan Hunt",
+    "project": "Security Audit",
+    "amount": 3000.00,
+    "status": "Paid",
+    "date": "2023-08-15",
+    "dueDate": "2023-09-15"
+  }
+]

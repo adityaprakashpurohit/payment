@@ -1,0 +1,24 @@
+{
+  "totalClients": 5,
+  "pendingPayments": 3,
+  "paidPayments": 2,
+  "revenue": 3500.00,
+  "paymentsThisMonth": 2,
+  "revenueChart": [
+    { "name": "Jan", "total": 1200 },
+    { "name": "Feb", "total": 2100 },
+    { "name": "Mar", "total": 800 },
+    { "name": "Apr", "total": 1600 },
+    { "name": "May", "total": 900 },
+    { "name": "Jun", "total": 1700 },
+    { "name": "Jul", "total": 2500 },
+    { "name": "Aug", "total": 3100 },
+    { "name": "Sep", "total": 2800 },
+    { "name": "Oct", "total": 3500 }
+  ],
+  "paymentStatusChart": [
+    { "name": "Pending", "value": 3, "color": "#F59E0B" },
+    { "name": "Paid", "value": 2, "color": "#22C55E" },
+    { "name": "Overdue", "value": 1, "color": "#EF4444" }
+  ]
+}
