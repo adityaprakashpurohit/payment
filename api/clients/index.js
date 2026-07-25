@@ -1,9 +1,14 @@
-import { kv } from '@vercel/kv';
+import { list, put } from '@vercel/blob';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
-      const clients = (await kv.get('clients')) || [];
+      let clients = [];
+      const { blobs } = await list({ prefix: 'clients.json' });
+      if (blobs.length > 0) {
+        const fetchRes = await fetch(blobs[0].url);
+        clients = await fetchRes.json();
+      }
       return res.status(200).json(clients);
     } catch (error) {
       console.error('Fetch clients error:', error);
@@ -14,12 +19,21 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const { email, password, fullName, company, phone } = req.body;
-      const clients = (await kv.get('clients')) || [];
+      
+      let clients = [];
+      const { blobs } = await list({ prefix: 'clients.json' });
+      if (blobs.length > 0) {
+        const fetchRes = await fetch(blobs[0].url);
+        clients = await fetchRes.json();
+      }
       
       const newClient = { email, password, fullName, company, phone, id: Date.now() };
       clients.push(newClient);
       
-      await kv.set('clients', clients);
+      await put('clients.json', JSON.stringify(clients), {
+        access: 'public',
+        addRandomSuffix: false,
+      });
       
       return res.status(201).json(newClient);
     } catch (error) {
