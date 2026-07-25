@@ -9,7 +9,6 @@ import toast from "react-hot-toast";
 export const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState("admin");
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -17,17 +16,20 @@ export const Login = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
-
   const onSubmit = (data) => {
     setIsLoading(true);
     // Simulate network request
     setTimeout(() => {
       setIsLoading(false);
-      toast.success(`Logged in successfully as ${role}`);
-      if (role === "admin") {
+      
+      if (data.email === "aditya@aditya.com" && data.password === "Aditya@123") {
+        toast.success("Logged in successfully as Admin");
         navigate("/admin/dashboard");
-      } else {
+      } else if (data.email === "client@aditya.com" && data.password === "client") {
+        toast.success("Logged in successfully as Client");
         navigate("/client/dashboard");
+      } else {
+        toast.error("Invalid credentials");
       }
     }, 1000);
   };
