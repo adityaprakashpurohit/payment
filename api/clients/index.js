@@ -6,7 +6,9 @@ export default async function handler(req, res) {
       let clients = [];
       const { blobs } = await list({ prefix: 'clients.json' });
       if (blobs.length > 0) {
-        const fetchRes = await fetch(blobs[0].url);
+        const fetchRes = await fetch(blobs[0].url, {
+          headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+        });
         clients = await fetchRes.json();
       }
       return res.status(200).json(clients);
@@ -23,7 +25,9 @@ export default async function handler(req, res) {
       let clients = [];
       const { blobs } = await list({ prefix: 'clients.json' });
       if (blobs.length > 0) {
-        const fetchRes = await fetch(blobs[0].url);
+        const fetchRes = await fetch(blobs[0].url, {
+          headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+        });
         clients = await fetchRes.json();
       }
       
@@ -31,14 +35,14 @@ export default async function handler(req, res) {
       clients.push(newClient);
       
       await put('clients.json', JSON.stringify(clients), {
-        access: 'public',
+        access: 'private',
         addRandomSuffix: false,
       });
       
       return res.status(201).json(newClient);
     } catch (error) {
       console.error('Save client error:', error);
-      return res.status(500).json({ error: 'Internal Server Error' });
+      return res.status(500).json({ error: 'Internal Server Error', details: error.message, stack: error.stack });
     }
   }
 

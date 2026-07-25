@@ -7,7 +7,9 @@ export default async function handler(req, res) {
       let payments = [];
       const { blobs } = await list({ prefix: 'payments.json' });
       if (blobs.length > 0) {
-        const fetchRes = await fetch(blobs[0].url);
+        const fetchRes = await fetch(blobs[0].url, {
+          headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+        });
         payments = await fetchRes.json();
       }
       
@@ -29,7 +31,9 @@ export default async function handler(req, res) {
       let payments = [];
       const { blobs } = await list({ prefix: 'payments.json' });
       if (blobs.length > 0) {
-        const fetchRes = await fetch(blobs[0].url);
+        const fetchRes = await fetch(blobs[0].url, {
+          headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+        });
         payments = await fetchRes.json();
       }
       
@@ -43,14 +47,14 @@ export default async function handler(req, res) {
       payments.push(newPayment);
       
       await put('payments.json', JSON.stringify(payments), {
-        access: 'public',
+        access: 'private',
         addRandomSuffix: false,
       });
       
       return res.status(201).json(newPayment);
     } catch (error) {
       console.error('Save payment error:', error);
-      return res.status(500).json({ error: 'Internal Server Error' });
+      return res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
   }
 

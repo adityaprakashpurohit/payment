@@ -6,14 +6,18 @@ export default async function handler(req, res) {
       let clients = [];
       const clientBlobs = await list({ prefix: 'clients.json' });
       if (clientBlobs.blobs.length > 0) {
-        const fetchRes = await fetch(clientBlobs.blobs[0].url);
+        const fetchRes = await fetch(clientBlobs.blobs[0].url, {
+          headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+        });
         clients = await fetchRes.json();
       }
 
       let payments = [];
       const paymentBlobs = await list({ prefix: 'payments.json' });
       if (paymentBlobs.blobs.length > 0) {
-        const fetchRes = await fetch(paymentBlobs.blobs[0].url);
+        const fetchRes = await fetch(paymentBlobs.blobs[0].url, {
+          headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+        });
         payments = await fetchRes.json();
       }
 
