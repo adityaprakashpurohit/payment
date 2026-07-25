@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       await put('clients.json', JSON.stringify(clients), {
         access: 'private',
         addRandomSuffix: false,
+        allowOverwrite: true,
       });
       
       return res.status(201).json(newClient);

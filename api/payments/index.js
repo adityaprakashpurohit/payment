@@ -49,6 +49,7 @@ export default async function handler(req, res) {
       await put('payments.json', JSON.stringify(payments), {
         access: 'private',
         addRandomSuffix: false,
+        allowOverwrite: true,
       });
       
       return res.status(201).json(newPayment);
