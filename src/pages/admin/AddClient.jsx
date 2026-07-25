@@ -26,6 +26,11 @@ export const AddClient = () => {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
+      
+      const clients = JSON.parse(localStorage.getItem('clients') || '[]');
+      clients.push({ email: data.email, password: data.password });
+      localStorage.setItem('clients', JSON.stringify(clients));
+      
       toast.success("Client added successfully!");
       navigate("/admin/clients");
     }, 1000);

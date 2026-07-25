@@ -22,14 +22,19 @@ export const Login = () => {
     setTimeout(() => {
       setIsLoading(false);
       
-      if (data.email === "aditya@aditya.com" && data.password === "Aditya@123") {
+      if (data.email === "admin@aditya.com" && data.password === "admin") {
         toast.success("Logged in successfully as Admin");
         navigate("/admin/dashboard");
-      } else if (data.email === "client@aditya.com" && data.password === "client") {
-        toast.success("Logged in successfully as Client");
-        navigate("/client/dashboard");
       } else {
-        toast.error("Invalid credentials");
+        const clients = JSON.parse(localStorage.getItem('clients') || '[]');
+        const validClient = clients.find(c => c.email === data.email && c.password === data.password);
+        
+        if (validClient) {
+          toast.success("Logged in successfully as Client");
+          navigate("/client/dashboard");
+        } else {
+          toast.error("Invalid credentials");
+        }
       }
     }, 1000);
   };
