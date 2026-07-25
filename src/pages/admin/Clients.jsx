@@ -6,18 +6,41 @@ import { Table, Thead, Tbody, Tr, Th, Td } from "../../components/ui/Table";
 import { Badge } from "../../components/ui/Badge";
 import { Pagination } from "../../components/ui/Pagination";
 import { useNavigate } from "react-router-dom";
-import clientsData from "../../mock/clients.json";
-
 export const Clients = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [clientsData, setClientsData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 5;
 
+  React.useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const res = await fetch('/api/clients');
+        if (res.ok) {
+          const data = await res.json();
+          const formattedData = data.map(c => ({
+            ...c,
+            name: c.fullName || c.name || 'Unknown',
+            status: c.status || 'Active',
+            totalDue: c.totalDue || 0
+          }));
+          setClientsData(formattedData);
+        }
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchClients();
+  }, []);
+
   const filteredClients = clientsData.filter((client) =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.company.toLowerCase().includes(searchTerm.toLowerCase())
+    (client.name && client.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (client.company && client.company.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);

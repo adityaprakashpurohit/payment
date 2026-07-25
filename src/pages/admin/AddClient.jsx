@@ -21,19 +21,25 @@ export const AddClient = () => {
 
   const password = watch("password");
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
       
-      const clients = JSON.parse(localStorage.getItem('clients') || '[]');
-      clients.push({ email: data.email, password: data.password });
-      localStorage.setItem('clients', JSON.stringify(clients));
+      if (!res.ok) throw new Error('Failed to save client');
       
       toast.success("Client added successfully!");
       navigate("/admin/clients");
-    }, 1000);
+    } catch (error) {
+      console.error('Error adding client:', error);
+      toast.error('Failed to add client. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

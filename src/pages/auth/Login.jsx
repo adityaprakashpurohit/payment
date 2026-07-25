@@ -16,27 +16,32 @@ export const Login = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     setIsLoading(true);
-    // Simulate network request
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
       
-      if (data.email === "admin@aditya.com" && data.password === "admin") {
-        toast.success("Logged in successfully as Admin");
-        navigate("/admin/dashboard");
-      } else {
-        const clients = JSON.parse(localStorage.getItem('clients') || '[]');
-        const validClient = clients.find(c => c.email === data.email && c.password === data.password);
-        
-        if (validClient) {
-          toast.success("Logged in successfully as Client");
-          navigate("/client/dashboard");
+      if (res.ok) {
+        toast.success(result.message);
+        if (result.role === 'admin') {
+          navigate('/admin/dashboard');
         } else {
-          toast.error("Invalid credentials");
+          navigate('/client/dashboard');
         }
+      } else {
+        toast.error(result.error || 'Invalid credentials');
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
