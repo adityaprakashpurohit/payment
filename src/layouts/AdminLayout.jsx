@@ -8,7 +8,7 @@ export const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background cyber-grid-bg selection:bg-accent selection:text-black">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}

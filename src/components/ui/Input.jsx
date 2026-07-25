@@ -1,31 +1,33 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import { cn } from "../../utils/cn";
 
-export const Input = React.forwardRef(({ className, type, error, icon: Icon, ...props }, ref) => {
+export const Input = forwardRef(({ className, icon: Icon, error, ...props }, ref) => {
   return (
-    <div className="relative w-full">
-      {Icon ? (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-accent pointer-events-none">
-          <Icon size={20} />
-        </div>
-      ) : (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-accent pointer-events-none font-mono font-bold animate-blink">
-          &gt;
-        </div>
-      )}
-      <input
-        type={type}
-        className={cn(
-          "flex h-12 w-full bg-input border border-border cyber-chamfer-sm px-4 py-2 pl-8 font-mono text-base text-accent transition-all duration-200 placeholder:text-muted-foreground placeholder:uppercase focus-visible:outline-none focus-visible:border-accent focus-visible:[box-shadow:var(--box-shadow-neon)] disabled:cursor-not-allowed disabled:opacity-50",
-          Icon && "pl-10",
-          error && "border-destructive focus-visible:border-destructive focus-visible:ring-0",
-          className
+    <div className="w-full relative">
+      <div className="relative">
+        {Icon && (
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+            <Icon size={20} />
+          </div>
         )}
-        ref={ref}
-        {...props}
-      />
-      {error && <p className="mt-2 text-sm font-mono uppercase text-destructive tracking-widest drop-shadow-[0_0_5px_rgba(255,51,102,0.5)]">{error}</p>}
+        <input
+          ref={ref}
+          className={cn(
+            "w-full h-12 px-4 bg-input border border-border rounded-xl text-foreground placeholder:text-muted-foreground transition-all duration-200 outline-none focus:border-accent focus:ring-4 focus:ring-accent/20",
+            Icon && "pl-11",
+            error && "border-destructive focus:border-destructive focus:ring-destructive/20",
+            className
+          )}
+          {...props}
+        />
+      </div>
+      {error && (
+        <p className="absolute -bottom-6 left-0 text-sm text-destructive font-medium">
+          {error}
+        </p>
+      )}
     </div>
   );
 });
+
 Input.displayName = "Input";

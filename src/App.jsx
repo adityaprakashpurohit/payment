@@ -31,11 +31,10 @@ function App() {
       <Toaster 
         position="top-right"
         toastOptions={{
-          className: 'bg-card border-2 border-accent text-accent font-mono uppercase rounded-none cyber-chamfer-sm [box-shadow:var(--box-shadow-neon-sm)]',
+          className: 'bg-card border border-border text-foreground rounded-xl shadow-soft',
           style: {
-            borderRadius: '0px',
             padding: '16px',
-            color: 'var(--color-accent)',
+            color: 'var(--color-foreground)',
             backgroundColor: 'var(--color-card)',
           },
         }}
@@ -62,6 +61,7 @@ function App() {
         <Route path="/client" element={<ClientLayout />}>
           <Route path="dashboard" element={<ClientDashboard />} />
           <Route path="payment-history" element={<PaymentHistory />} />
+          <Route path="invoice/:id" element={<Invoice />} />
           <Route path="invoice" element={<Invoice />} />
         </Route>
 

@@ -1,27 +1,48 @@
-import React, { useState } from "react";
-import { CreditCard, History, Download, Calendar } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { CreditCard, History, Calendar, CheckCircle } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Modal } from "../../components/ui/Modal";
+import { Loader } from "../../components/ui/Loader";
 import toast from "react-hot-toast";
-import MarqueeComponent from "react-fast-marquee";
-const Marquee = MarqueeComponent.default || MarqueeComponent;
-
-// Using mock data for demonstration
-const mockInvoices = [
-  { id: "INV-1004", project: "Consulting", amount: 500.00, dueDate: "2023-10-10", status: "Paid" },
-  { id: "INV-1008", project: "Additional Revisions", amount: 250.00, dueDate: "2023-11-05", status: "Pending" }
-];
 
 export const ClientDashboard = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
 
-  const pendingInvoices = mockInvoices.filter(inv => inv.status === "Pending");
-  const outstandingBalance = pendingInvoices.reduce((acc, curr) => acc + curr.amount, 0);
+  const email = localStorage.getItem("userEmail") || "";
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const res = await fetch(`/api/payments?email=${encodeURIComponent(email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setInvoices(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch client invoices:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (email) {
+      fetchInvoices();
+    } else {
+      setIsLoading(false);
+    }
+  }, [email]);
+
+  const pendingInvoices = invoices.filter(inv => inv.status === "Pending");
+  const paidInvoices = invoices.filter(inv => inv.status === "Paid");
+  
+  const outstandingBalance = pendingInvoices.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+  const totalPaid = paidInvoices.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
 
   const handlePayNow = (invoice) => {
     setSelectedInvoice(invoice);
@@ -29,7 +50,7 @@ export const ClientDashboard = () => {
     setPaymentMethod("");
   };
 
-  const processPayment = () => {
+  const processPayment = async () => {
     if (!paymentMethod) {
       toast.error("Please select a payment method");
       return;
@@ -37,107 +58,92 @@ export const ClientDashboard = () => {
     
     setIsProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
+    // Simulate payment processing then update status via API (we would ideally have a PUT endpoint)
+    setTimeout(async () => {
+      // In a real app we'd call an API to mark as paid here.
+      // For now, we'll just mock the success locally to avoid creating another endpoint for this demo.
+      setInvoices(invoices.map(inv => 
+        inv.id === selectedInvoice.id ? { ...inv, status: 'Paid' } : inv
+      ));
+      
       setIsProcessing(false);
       setIsPaymentModalOpen(false);
-      toast.success("Payment Successful! Mock only.");
+      toast.success(`Payment of ₹${selectedInvoice.amount} via ${paymentMethod} successful!`);
     }, 1500);
   };
 
+  if (isLoading) {
+    return <div className="flex justify-center p-24"><Loader className="w-8 h-8 text-accent" /></div>;
+  }
+
   return (
-    <div className="space-y-12 pb-24">
+    <div className="space-y-8 pb-24">
       {/* Hero Section */}
-      <div className="py-12 border-b-2 border-border mb-12">
-        <h1 className="text-[clamp(3rem,8vw,8rem)] font-black uppercase tracking-tighter text-foreground leading-[0.85]">
-          WELCOME<br/>BACK, BOB
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground">
+          Welcome back
         </h1>
+        <p className="text-muted-foreground mt-2">Manage your invoices and payments securely.</p>
       </div>
 
-      {/* Stats Marquee */}
-      <div className="w-full bg-[#4ADE80] border-y-2 border-border py-4 mb-12 -mx-4 sm:-mx-8 lg:-mx-12 px-4 sm:px-8 lg:px-12 w-[100vw] relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
-        <Marquee speed={80} gradient={false}>
-          <div className="flex items-center gap-16 px-16">
-            <div className="flex items-center gap-4">
-              <span className="text-3xl font-black uppercase text-black">OUTSTANDING BALANCE:</span>
-              <span className="text-5xl font-black uppercase text-black">₹{outstandingBalance.toFixed(2)}</span>
-            </div>
-            <div className="text-black font-black text-4xl">•</div>
-            <div className="flex items-center gap-4">
-              <span className="text-3xl font-black uppercase text-black">TOTAL PAID:</span>
-              <span className="text-5xl font-black uppercase text-black">₹500.00</span>
-            </div>
-            <div className="text-black font-black text-4xl">•</div>
-            <div className="flex items-center gap-4">
-              <span className="text-3xl font-black uppercase text-black">PENDING INVOICES:</span>
-              <span className="text-5xl font-black uppercase text-black">{pendingInvoices.length}</span>
-            </div>
-            <div className="text-black font-black text-4xl">•</div>
-          </div>
-        </Marquee>
-      </div>
-
-      <div className="grid gap-px bg-border sm:grid-cols-2 border-2 border-border mb-12">
-        <Card className="border-none flex flex-col justify-center bg-accent text-black group relative overflow-hidden">
+      <div className="grid gap-6 sm:grid-cols-2 mb-8">
+        <Card className="flex flex-col justify-center bg-blue-50 border-blue-100 relative overflow-hidden p-8 shadow-sm">
           <div className="relative z-10 flex flex-col h-full justify-between">
-            <div className="flex items-center justify-between opacity-80 mb-4">
-              <p className="font-bold uppercase tracking-widest text-black">Outstanding Balance</p>
-              <CreditCard size={32} className="text-black" />
+            <div className="flex items-center justify-between mb-2">
+              <p className="font-semibold text-blue-700">Outstanding Balance</p>
+              <CreditCard size={24} className="text-blue-500" />
             </div>
-            <h3 className="text-6xl font-black uppercase tracking-tighter text-black">₹{outstandingBalance.toFixed(2)}</h3>
-            <p className="mt-4 text-xl font-bold uppercase tracking-tighter text-black/70">{pendingInvoices.length} pending payments</p>
-          </div>
-          {/* Decorative Massive Number */}
-          <div className="absolute -right-8 -bottom-16 text-[10rem] font-black text-black opacity-10 select-none pointer-events-none group-hover:scale-110 transition-transform duration-300">
-            {pendingInvoices.length}
+            <h3 className="text-4xl font-bold text-blue-900 mb-2">₹{outstandingBalance.toFixed(2)}</h3>
+            <p className="text-sm font-medium text-blue-700/80">{pendingInvoices.length} pending payment{pendingInvoices.length !== 1 && 's'}</p>
           </div>
         </Card>
         
-        <Card className="border-none flex flex-col justify-center">
-          <div className="flex items-center justify-between mb-4">
-            <p className="font-bold uppercase tracking-widest text-muted-foreground">Total Paid</p>
-            <History size={32} className="text-muted-foreground" />
+        <Card className="flex flex-col justify-center p-8 border border-border shadow-soft">
+          <div className="flex items-center justify-between mb-2">
+            <p className="font-semibold text-muted-foreground">Total Paid</p>
+            <History size={24} className="text-muted-foreground" />
           </div>
-          <h3 className="text-6xl font-black uppercase tracking-tighter text-foreground">₹500.00</h3>
+          <h3 className="text-4xl font-bold text-foreground mb-2">₹{totalPaid.toFixed(2)}</h3>
+          <p className="text-sm font-medium text-muted-foreground">{paidInvoices.length} completed payment{paidInvoices.length !== 1 && 's'}</p>
         </Card>
       </div>
 
-      <h2 className="text-4xl font-black uppercase tracking-tighter text-foreground mt-12 mb-8 pb-4 border-b-2 border-border">OUTSTANDING INVOICES</h2>
+      <h2 className="text-xl font-bold text-foreground mt-8 mb-6 pb-2 border-b border-border">Pending Invoices</h2>
       
-      <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {pendingInvoices.map(invoice => (
-          <Card key={invoice.id} hoverable className="flex flex-col justify-between p-8">
+          <Card key={invoice.id} className="flex flex-col justify-between p-6 shadow-soft hover:shadow-md transition-shadow">
             <div>
-              <div className="flex items-start justify-between mb-8">
+              <div className="flex items-start justify-between mb-6">
                 <div>
-                  <Badge variant="warning" className="mb-4">Pending</Badge>
-                  <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground mb-2">{invoice.id}</h3>
-                  <p className="text-lg font-bold uppercase tracking-tighter text-muted-foreground">{invoice.project}</p>
+                  <Badge variant="warning" className="mb-3">Pending</Badge>
+                  <h3 className="text-lg font-bold text-foreground mb-1">{invoice.id}</h3>
+                  <p className="text-sm text-muted-foreground">{invoice.project}</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-4xl font-black uppercase tracking-tighter text-foreground">₹{invoice.amount.toFixed(2)}</span>
+                  <span className="text-xl font-bold text-foreground">₹{parseFloat(invoice.amount).toFixed(2)}</span>
                 </div>
               </div>
               
-              <div className="flex items-center text-lg font-bold uppercase tracking-tighter text-muted-foreground mb-8 border-t-2 border-border pt-4">
-                <Calendar size={20} className="mr-4" />
-                DUE: {invoice.dueDate}
+              <div className="flex items-center text-sm font-medium text-muted-foreground mb-6">
+                <Calendar size={16} className="mr-2" />
+                Due: {invoice.dueDate}
               </div>
             </div>
             
-            <Button onClick={() => handlePayNow(invoice)} className="w-full h-20 text-2xl">
-              PAY NOW
+            <Button onClick={() => handlePayNow(invoice)} className="w-full">
+              Pay Now
             </Button>
           </Card>
         ))}
         {pendingInvoices.length === 0 && (
           <div className="col-span-full">
-            <Card className="text-center py-24 border-dashed">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-[#4ADE80] text-black mb-8 border-2 border-border">
-                <CreditCard size={48} />
+            <Card className="text-center py-16 shadow-sm bg-muted/30 border-dashed">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-6">
+                <CheckCircle size={32} />
               </div>
-              <h3 className="text-4xl font-black uppercase tracking-tighter text-foreground mb-4">ALL CAUGHT UP!</h3>
-              <p className="mt-4 text-xl font-bold uppercase tracking-tighter text-muted-foreground">NO PENDING INVOICES.</p>
+              <h3 className="text-xl font-bold text-foreground mb-2">All caught up!</h3>
+              <p className="text-muted-foreground">You have no pending invoices.</p>
             </Card>
           </div>
         )}
@@ -147,61 +153,61 @@ export const ClientDashboard = () => {
       <Modal 
         isOpen={isPaymentModalOpen} 
         onClose={() => !isProcessing && setIsPaymentModalOpen(false)}
-        title="MAKE PAYMENT"
+        title="Make Payment"
       >
         {selectedInvoice && (
-          <div className="space-y-8">
-            <div className="bg-muted border-2 border-border p-6 flex justify-between items-center">
+          <div className="space-y-6">
+            <div className="bg-muted rounded-xl p-6 flex justify-between items-center">
               <div>
-                <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">INVOICE</p>
-                <p className="text-2xl font-black uppercase tracking-tighter text-foreground">{selectedInvoice.id}</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Invoice</p>
+                <p className="text-lg font-bold text-foreground">{selectedInvoice.id}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">AMOUNT</p>
-                <p className="text-4xl font-black uppercase tracking-tighter text-foreground">₹{selectedInvoice.amount.toFixed(2)}</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Amount</p>
+                <p className="text-2xl font-bold text-foreground">₹{parseFloat(selectedInvoice.amount).toFixed(2)}</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-xl font-bold uppercase tracking-tighter text-foreground mb-4">
-                PAYMENT METHOD
+              <label className="block text-sm font-semibold text-foreground mb-3">
+                Select Payment Method
               </label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 {["Credit Card", "Debit Card", "UPI", "Net Banking", "Wallet"].map((method) => (
                   <div 
                     key={method}
                     onClick={() => setPaymentMethod(method)}
-                    className={`cursor-pointer border-2 p-4 text-center transition-colors ${
+                    className={`cursor-pointer border rounded-xl p-4 text-center transition-colors ${
                       paymentMethod === method 
-                        ? "border-black bg-accent text-black" 
+                        ? "border-accent bg-blue-50 text-accent font-semibold" 
                         : "border-border hover:bg-muted text-foreground"
                     }`}
                   >
-                    <span className="text-lg font-bold uppercase tracking-tighter">{method}</span>
+                    <span className="text-sm">{method}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-muted border-2 border-border p-4 text-xl font-bold uppercase tracking-tighter text-foreground text-center">
-              MOCK PAYMENT GATEWAY
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm font-medium text-blue-800 text-center">
+              Mock Payment Gateway - No real charges will be made.
             </div>
 
-            <div className="flex gap-4 mt-12 pt-8 border-t-2 border-border">
+            <div className="flex gap-4 pt-4 border-t border-border">
               <Button 
                 variant="outline" 
-                className="flex-1 h-20 text-2xl"
+                className="flex-1"
                 onClick={() => setIsPaymentModalOpen(false)}
                 disabled={isProcessing}
               >
-                CANCEL
+                Cancel
               </Button>
               <Button 
-                className="flex-1 h-20 text-2xl"
+                className="flex-1"
                 onClick={processPayment}
                 isLoading={isProcessing}
               >
-                PROCEED
+                Confirm Payment
               </Button>
             </div>
           </div>

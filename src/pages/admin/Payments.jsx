@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, Download, Eye, Calendar } from "lucide-react";
 import { Input } from "../../components/ui/Input";
 import { Table, Thead, Tbody, Tr, Th, Td } from "../../components/ui/Table";
 import { Badge } from "../../components/ui/Badge";
 import { Pagination } from "../../components/ui/Pagination";
-import paymentsData from "../../mock/payments.json";
+import { Loader } from "../../components/ui/Loader";
 
 export const Payments = () => {
+  const [payments, setPayments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
@@ -14,11 +16,28 @@ export const Payments = () => {
 
   const statuses = ["All", "Pending", "Paid", "Overdue"];
 
-  const filteredPayments = paymentsData.filter((payment) => {
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const res = await fetch('/api/payments');
+        if (res.ok) {
+          const data = await res.json();
+          setPayments(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch payments:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPayments();
+  }, []);
+
+  const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
       payment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.project.toLowerCase().includes(searchTerm.toLowerCase());
+      (payment.clientName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (payment.project || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "All" || payment.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -29,19 +48,24 @@ export const Payments = () => {
     currentPage * itemsPerPage
   );
 
+  if (isLoading) {
+    return <div className="flex justify-center p-24"><Loader className="w-8 h-8 text-accent" /></div>;
+  }
+
   return (
-    <div className="space-y-12 pb-24 relative h-full flex flex-col">
-      <div className="py-12 border-b-2 border-border mb-12">
-        <h1 className="text-[clamp(3rem,8vw,8rem)] font-black uppercase tracking-tighter text-foreground leading-[0.85]">
-          PAYMENT<br/>HISTORY
+    <div className="space-y-8 pb-24 relative h-full flex flex-col">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground">
+          Payment History
         </h1>
+        <p className="text-muted-foreground mt-2">View and manage all your client payments.</p>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-2 border-border p-4 bg-background">
-        <div className="w-full sm:max-w-xl relative">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card rounded-2xl p-4 shadow-soft">
+        <div className="w-full sm:max-w-md relative">
           <Input
             icon={Search}
-            placeholder="SEARCH INVOICES..."
+            placeholder="Search invoices..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -51,10 +75,10 @@ export const Payments = () => {
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-6 py-4 text-xl font-bold uppercase tracking-tighter border-2 transition-colors ${
+              className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
                 statusFilter === status
-                  ? "bg-foreground text-black border-foreground"
-                  : "bg-transparent text-foreground border-transparent hover:border-border hover:bg-muted"
+                  ? "bg-foreground text-background"
+                  : "bg-transparent text-foreground hover:bg-muted"
               }`}
             >
               {status}
@@ -63,7 +87,7 @@ export const Payments = () => {
         </div>
       </div>
 
-      <div className="flex-1 min-h-[400px]">
+      <div className="flex-1 bg-card rounded-2xl shadow-soft overflow-hidden">
         <Table>
           <Thead>
             <Tr>
@@ -79,11 +103,11 @@ export const Payments = () => {
             {paginatedPayments.map((payment) => (
               <Tr key={payment.id}>
                 <Td>
-                  <div className="font-black text-2xl uppercase tracking-tighter text-foreground">{payment.id}</div>
-                  <div className="font-bold text-muted-foreground uppercase">{payment.project}</div>
+                  <div className="font-semibold text-foreground">{payment.id}</div>
+                  <div className="text-sm text-muted-foreground">{payment.project}</div>
                 </Td>
-                <Td className="font-bold uppercase tracking-tighter">{payment.clientName}</Td>
-                <Td className="font-black text-3xl uppercase tracking-tighter">₹{payment.amount.toFixed(2)}</Td>
+                <Td className="font-medium">{payment.clientName}</Td>
+                <Td className="font-semibold">₹{parseFloat(payment.amount).toFixed(2)}</Td>
                 <Td>
                   <Badge
                     variant={
@@ -91,25 +115,25 @@ export const Payments = () => {
                         ? "success"
                         : payment.status === "Pending"
                         ? "warning"
-                        : "danger"
+                        : "destructive"
                     }
                   >
                     {payment.status}
                   </Badge>
                 </Td>
                 <Td>
-                  <div className="flex items-center text-lg font-bold uppercase tracking-tighter text-muted-foreground">
-                    <Calendar size={20} className="mr-2" />
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Calendar size={16} className="mr-2" />
                     {payment.date}
                   </div>
                 </Td>
                 <Td>
-                  <div className="flex items-center gap-4">
-                    <button className="p-2 border-2 border-transparent text-foreground hover:bg-muted hover:border-border transition-colors">
-                      <Eye size={24} />
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                      <Eye size={20} />
                     </button>
-                    <button className="p-2 border-2 border-transparent text-foreground hover:bg-accent hover:border-black hover:text-black transition-colors">
-                      <Download size={24} />
+                    <button className="p-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-white transition-colors">
+                      <Download size={20} />
                     </button>
                   </div>
                 </Td>
@@ -117,8 +141,8 @@ export const Payments = () => {
             ))}
             {paginatedPayments.length === 0 && (
               <Tr>
-                <Td colSpan={6} className="text-center text-muted-foreground py-16 font-bold uppercase text-2xl tracking-tighter">
-                  NO PAYMENTS FOUND.
+                <Td colSpan={6} className="text-center text-muted-foreground py-16">
+                  No payments found matching your criteria.
                 </Td>
               </Tr>
             )}

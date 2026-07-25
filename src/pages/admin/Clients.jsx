@@ -5,7 +5,9 @@ import { Input } from "../../components/ui/Input";
 import { Table, Thead, Tbody, Tr, Th, Td } from "../../components/ui/Table";
 import { Badge } from "../../components/ui/Badge";
 import { Pagination } from "../../components/ui/Pagination";
+import { Loader } from "../../components/ui/Loader";
 import { useNavigate } from "react-router-dom";
+
 export const Clients = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,7 +24,7 @@ export const Clients = () => {
           const data = await res.json();
           const formattedData = data.map(c => ({
             ...c,
-            name: c.fullName || c.name || 'Unknown',
+            name: c.name || c.fullName || 'Unknown',
             status: c.status || 'Active',
             totalDue: c.totalDue || 0
           }));
@@ -49,35 +51,41 @@ export const Clients = () => {
     currentPage * itemsPerPage
   );
 
+  if (isLoading) {
+    return <div className="flex justify-center p-24"><Loader className="w-8 h-8 text-accent" /></div>;
+  }
+
   return (
-    <div className="space-y-12 pb-24">
-      {/* Hero Section */}
-      <div className="py-12 border-b-2 border-border mb-12 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+    <div className="space-y-8 pb-24 h-full flex flex-col">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-4">
         <div>
-          <h1 className="text-[clamp(3rem,8vw,8rem)] font-black uppercase tracking-tighter text-foreground leading-[0.85]">
-            CLIENT<br/>ROSTER
+          <h1 className="text-3xl font-bold text-foreground">
+            Client Roster
           </h1>
+          <p className="text-muted-foreground mt-2">Manage your clients and their outstanding balances.</p>
         </div>
-        <Button onClick={() => navigate("/admin/add-client")} className="h-20 text-2xl w-full lg:w-auto px-12">
-          NEW CLIENT
+        <Button onClick={() => navigate("/admin/add-client")} className="w-full lg:w-auto">
+          <Plus size={18} className="mr-2" />
+          New Client
         </Button>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-2 border-border p-4 bg-background">
-        <div className="w-full sm:max-w-xl relative">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card rounded-2xl p-4 shadow-soft">
+        <div className="w-full sm:max-w-md relative">
           <Input
             icon={Search}
-            placeholder="SEARCH CLIENTS..."
+            placeholder="Search clients..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-24 px-12 text-2xl w-full sm:w-auto">
-          FILTER
+        <Button variant="outline" className="w-full sm:w-auto">
+          <Filter size={18} className="mr-2" />
+          Filter
         </Button>
       </div>
 
-      <div className="flex-1 min-h-[400px]">
+      <div className="flex-1 bg-card rounded-2xl shadow-soft overflow-hidden">
         <Table>
           <Thead>
             <Tr>
@@ -92,33 +100,33 @@ export const Clients = () => {
             {paginatedClients.map((client) => (
               <Tr key={client.id}>
                 <Td>
-                  <div className="flex items-center gap-6">
-                    <div className="h-16 w-16 bg-muted flex items-center justify-center font-black text-2xl uppercase border-2 border-border group-hover:bg-accent group-hover:text-black transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center font-bold text-accent">
                       {client.name.charAt(0)}
                     </div>
                     <div>
-                      <div className="font-black text-2xl uppercase tracking-tighter">{client.name}</div>
-                      <div className="font-bold text-muted-foreground uppercase">{client.email}</div>
+                      <div className="font-semibold text-foreground">{client.name}</div>
+                      <div className="text-sm text-muted-foreground">{client.email}</div>
                     </div>
                   </div>
                 </Td>
-                <Td className="font-bold uppercase tracking-tighter">{client.company}</Td>
+                <Td className="font-medium">{client.company}</Td>
                 <Td>
                   <Badge variant={client.status === "Active" ? "success" : "default"}>
                     {client.status}
                   </Badge>
                 </Td>
-                <Td className="font-black text-3xl uppercase tracking-tighter">₹{client.totalDue.toFixed(2)}</Td>
+                <Td className="font-semibold">₹{client.totalDue.toFixed(2)}</Td>
                 <Td>
-                  <div className="flex items-center gap-4">
-                    <button className="p-2 border-2 border-transparent text-foreground hover:bg-muted hover:border-border transition-colors">
-                      <Eye size={24} />
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                      <Eye size={18} />
                     </button>
-                    <button className="p-2 border-2 border-transparent text-foreground hover:bg-muted hover:border-border transition-colors">
-                      <Edit size={24} />
+                    <button className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                      <Edit size={18} />
                     </button>
-                    <button className="p-2 border-2 border-transparent text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition-colors">
-                      <Trash2 size={24} />
+                    <button className="p-2 rounded-lg text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors">
+                      <Trash2 size={18} />
                     </button>
                   </div>
                 </Td>
@@ -126,8 +134,8 @@ export const Clients = () => {
             ))}
             {paginatedClients.length === 0 && (
               <Tr>
-                <Td colSpan={5} className="text-center text-muted-foreground py-16 font-bold uppercase text-2xl tracking-tighter">
-                  NO CLIENTS FOUND.
+                <Td colSpan={5} className="text-center text-muted-foreground py-16">
+                  No clients found.
                 </Td>
               </Tr>
             )}

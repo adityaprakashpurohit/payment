@@ -24,10 +24,13 @@ export const AddClient = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
+      // In the backend, we should use 'name' to be consistent, so we map fullName to name
+      const payload = { ...data, name: data.fullName };
+      
       const res = await fetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       
       if (!res.ok) throw new Error('Failed to save client');
@@ -43,20 +46,21 @@ export const AddClient = () => {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-12 pb-24">
-      <div className="py-12 border-b-2 border-border mb-12">
-        <h1 className="text-[clamp(3rem,8vw,6rem)] font-black uppercase tracking-tighter text-foreground leading-[0.85]">
-          ADD NEW<br/>CLIENT
+    <div className="mx-auto max-w-5xl space-y-8 pb-24">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground">
+          Add New Client
         </h1>
+        <p className="text-muted-foreground mt-2">Create a new client profile and send them their login credentials.</p>
       </div>
 
-      <Card className="p-8 md:p-12">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
-          <div className="grid gap-12 lg:grid-cols-2">
+      <Card className="p-8 md:p-12 shadow-soft border-none">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="grid gap-8 lg:grid-cols-2">
             <div>
               <Input
                 icon={User}
-                placeholder="FULL NAME"
+                placeholder="Full Name"
                 {...register("fullName", { required: "Full name is required" })}
                 error={errors.fullName?.message}
               />
@@ -65,7 +69,7 @@ export const AddClient = () => {
             <div>
               <Input
                 icon={Building}
-                placeholder="COMPANY"
+                placeholder="Company"
                 {...register("company", { required: "Company is required" })}
                 error={errors.company?.message}
               />
@@ -75,7 +79,7 @@ export const AddClient = () => {
               <Input
                 icon={Mail}
                 type="email"
-                placeholder="EMAIL ADDRESS"
+                placeholder="Email Address"
                 {...register("email", { 
                   required: "Email is required",
                   pattern: {
@@ -91,7 +95,7 @@ export const AddClient = () => {
               <Input
                 icon={Phone}
                 type="tel"
-                placeholder="PHONE NUMBER"
+                placeholder="Phone Number"
                 {...register("phone")}
               />
             </div>
@@ -100,7 +104,7 @@ export const AddClient = () => {
               <Input
                 icon={Lock}
                 type="password"
-                placeholder="PASSWORD"
+                placeholder="Password"
                 {...register("password", { 
                   required: "Password is required",
                   minLength: { value: 8, message: "Minimum 8 characters" }
@@ -113,7 +117,7 @@ export const AddClient = () => {
               <Input
                 icon={Lock}
                 type="password"
-                placeholder="CONFIRM PASSWORD"
+                placeholder="Confirm Password"
                 {...register("confirmPassword", { 
                   required: "Please confirm password",
                   validate: value => value === password || "Passwords do not match"
@@ -123,18 +127,18 @@ export const AddClient = () => {
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-6 sm:flex-row sm:justify-end border-t-2 border-border pt-12">
+          <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-end border-t border-border pt-8 mt-8">
             <Button
               type="button"
               variant="outline"
               onClick={() => reset()}
               disabled={isLoading}
-              className="w-full sm:w-auto h-20 text-2xl px-12"
+              className="w-full sm:w-auto"
             >
-              RESET
+              Reset
             </Button>
-            <Button type="submit" isLoading={isLoading} className="w-full sm:w-auto h-20 text-2xl px-12">
-              SAVE CLIENT
+            <Button type="submit" isLoading={isLoading} className="w-full sm:w-auto">
+              Save Client
             </Button>
           </div>
         </form>

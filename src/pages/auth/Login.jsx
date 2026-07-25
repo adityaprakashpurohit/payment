@@ -16,6 +16,7 @@ export const Login = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
+
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
@@ -28,6 +29,9 @@ export const Login = () => {
       
       if (res.ok) {
         toast.success(result.message);
+        // Save user email to localStorage to simulate a session
+        localStorage.setItem("userEmail", data.email);
+        
         if (result.role === 'admin') {
           navigate('/admin/dashboard');
         } else {
@@ -46,12 +50,12 @@ export const Login = () => {
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
           <Input
             icon={Mail}
             type="email"
-            placeholder="EMAIL ADDRESS"
+            placeholder="Email address"
             {...register("email", { required: "Email is required" })}
             error={errors.email?.message}
           />
@@ -62,7 +66,7 @@ export const Login = () => {
             <Input
               icon={Lock}
               type={showPassword ? "text" : "password"}
-              placeholder="PASSWORD"
+              placeholder="Password"
               {...register("password", { required: "Password is required" })}
               error={errors.password?.message}
             />
@@ -71,41 +75,41 @@ export const Login = () => {
               className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-4"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <EyeOff size={32} /> : <Eye size={32} />}
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-8">
+        <div className="flex items-center justify-between mt-4">
           <div className="flex items-center">
             <input
               id="remember-me"
               type="checkbox"
-              className="h-6 w-6 appearance-none border-2 border-border bg-transparent checked:bg-accent checked:border-accent cursor-pointer transition-colors"
+              className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
             />
             <label
               htmlFor="remember-me"
-              className="ml-4 block text-lg font-bold uppercase tracking-tighter text-foreground cursor-pointer"
+              className="ml-2 block text-sm text-foreground cursor-pointer"
             >
-              REMEMBER ME
+              Remember me
             </label>
           </div>
           <div>
             <a
               href="#"
-              className="text-lg font-bold uppercase tracking-tighter text-muted-foreground hover:text-accent transition-colors"
+              className="text-sm font-medium text-accent hover:text-blue-500 transition-colors"
               onClick={(e) => {
                 e.preventDefault();
                 toast("Password reset link sent!");
               }}
             >
-              FORGOT PASSWORD?
+              Forgot password?
             </a>
           </div>
         </div>
 
-        <Button type="submit" className="w-full h-20 text-2xl mt-12" isLoading={isLoading}>
-          SIGN IN
+        <Button type="submit" className="w-full mt-8" isLoading={isLoading}>
+          Sign in
         </Button>
       </form>
     </div>

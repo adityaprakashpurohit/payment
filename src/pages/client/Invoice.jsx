@@ -1,39 +1,42 @@
-import React, { useState } from "react";
-import { Download, CheckCircle, Mail, Printer } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { Download, Mail, Printer } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
+import { Loader } from "../../components/ui/Loader";
 import toast from "react-hot-toast";
 
 export const Invoice = () => {
+  const { id } = useParams();
+  const [invoice, setInvoice] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const mockInvoice = {
-    id: "INV-1004",
-    date: "OCT 01, 2023",
-    dueDate: "OCT 10, 2023",
-    status: "PAID",
-    project: "CONSULTING SERVICES",
-    client: {
-      name: "BOB SMITH",
-      company: "GLOBEX INC",
-      email: "BOB@GLOBEX.COM",
-      address: "123 BUSINESS AVE, SUITE 100, TECH CITY, TC 90210"
-    },
-    company: {
-      name: "PAYFLOW PRO LLC",
-      email: "BILLING@PAYFLOWPRO.COM",
-      address: "456 STARTUP BLVD, FLOOR 4, INNOVATION HUB, IH 10001"
-    },
-    items: [
-      { description: "STRATEGY CONSULTING (10 HOURS)", amount: 1500.00 },
-      { description: "UI/UX REVIEW", amount: 500.00 },
-    ],
-    subtotal: 2000.00,
-    gstPercent: 10,
-    gst: 200.00,
-    total: 2200.00
-  };
+  const email = localStorage.getItem("userEmail") || "";
+
+  useEffect(() => {
+    const fetchInvoice = async () => {
+      try {
+        const res = await fetch(`/api/payments?email=${encodeURIComponent(email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          // If id is provided in URL, find it. Otherwise pick the first one for demonstration.
+          const found = id ? data.find(p => p.id === id) : data[0];
+          setInvoice(found);
+        }
+      } catch (error) {
+        console.error("Failed to fetch invoice:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (email) {
+      fetchInvoice();
+    } else {
+      setIsLoading(false);
+    }
+  }, [email, id]);
 
   const handleDownload = () => {
     setIsDownloading(true);
@@ -43,113 +46,124 @@ export const Invoice = () => {
     }, 1500);
   };
 
+  if (isLoading) {
+    return <div className="flex justify-center p-24"><Loader className="w-8 h-8 text-accent" /></div>;
+  }
+
+  if (!invoice) {
+    return (
+      <div className="flex justify-center p-24">
+        <p className="text-muted-foreground text-lg">Invoice not found.</p>
+      </div>
+    );
+  }
+
+  const subtotal = parseFloat(invoice.amount) / 1.18; // Reverse calculate assuming 18% GST
+  const gst = parseFloat(invoice.amount) - subtotal;
+
   return (
-    <div className="mx-auto max-w-5xl space-y-12 pb-24">
-      <div className="flex flex-col gap-8 md:flex-row md:items-end justify-between border-b-2 border-border pb-12 mb-12">
+    <div className="mx-auto max-w-5xl space-y-8 pb-24">
+      <div className="flex flex-col gap-6 md:flex-row md:items-center justify-between border-b border-border pb-8 mb-8">
         <div>
-          <h1 className="text-[clamp(3rem,8vw,6rem)] font-black uppercase tracking-tighter text-foreground leading-[0.85]">
-            INVOICE<br/>{mockInvoice.id}
+          <h1 className="text-3xl font-bold text-foreground">
+            Invoice {invoice.id}
           </h1>
         </div>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" className="h-16 px-6" onClick={() => toast.success("Invoice sent to email")}>
-            <Mail size={24} />
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="px-4" onClick={() => toast.success("Invoice sent to email")}>
+            <Mail size={18} className="mr-2" /> Email
           </Button>
-          <Button variant="outline" className="h-16 px-6" onClick={() => window.print()}>
-            <Printer size={24} />
+          <Button variant="outline" className="px-4" onClick={() => window.print()}>
+            <Printer size={18} className="mr-2" /> Print
           </Button>
-          <Button className="h-16 px-8 text-xl" onClick={handleDownload} isLoading={isDownloading}>
-            <Download size={24} className="mr-2" />
-            PDF
+          <Button className="px-6" onClick={handleDownload} isLoading={isDownloading}>
+            <Download size={18} className="mr-2" />
+            Download PDF
           </Button>
         </div>
       </div>
 
-      <Card className="p-8 sm:p-12 border-4 border-foreground" id="invoice-document">
+      <Card className="p-8 sm:p-12 shadow-md border-none" id="invoice-document">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-12 border-b-4 border-foreground pb-12 mb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-8 border-b border-border pb-8 mb-8">
           <div>
-            <div className="flex items-center gap-4 mb-8">
-              <div className="flex h-16 w-16 items-center justify-center bg-foreground text-black">
-                <span className="font-black text-4xl">P</span>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex h-12 w-12 items-center justify-center bg-accent text-white rounded-xl shadow-soft">
+                <span className="font-bold text-2xl">P</span>
               </div>
-              <span className="text-4xl font-black uppercase tracking-tighter text-foreground">
-                PAYFLOW PRO
+              <span className="text-2xl font-bold text-foreground">
+                PayFlow Pro
               </span>
             </div>
-            <div className="text-lg font-bold uppercase tracking-tighter text-muted-foreground space-y-2">
-              <p>{mockInvoice.company.name}</p>
-              <p>{mockInvoice.company.address}</p>
-              <p>{mockInvoice.company.email}</p>
+            <div className="text-sm font-medium text-muted-foreground space-y-1">
+              <p>PayFlow Pro LLC</p>
+              <p>456 Startup Blvd, Floor 4, Tech City</p>
+              <p>billing@payflowpro.com</p>
             </div>
           </div>
           
           <div className="md:text-right">
-            <h2 className="text-6xl font-black uppercase tracking-tighter text-muted mb-4">INVOICE</h2>
-            <div className="text-xl font-bold uppercase tracking-tighter text-muted-foreground space-y-2 mb-8">
-              <p>NO: <span className="text-foreground">{mockInvoice.id}</span></p>
-              <p>DATE: <span className="text-foreground">{mockInvoice.date}</span></p>
-              <p>DUE: <span className="text-foreground">{mockInvoice.dueDate}</span></p>
+            <h2 className="text-4xl font-bold text-foreground mb-4">INVOICE</h2>
+            <div className="text-sm font-medium text-muted-foreground space-y-1 mb-6">
+              <p>NO: <span className="text-foreground">{invoice.id}</span></p>
+              <p>DATE: <span className="text-foreground">{invoice.date}</span></p>
+              <p>DUE: <span className="text-foreground">{invoice.dueDate || invoice.date}</span></p>
             </div>
-            <Badge variant="success" className="text-2xl px-6 py-2 border-2 border-black">
-              {mockInvoice.status}
+            <Badge variant={invoice.status === 'Paid' ? 'success' : invoice.status === 'Pending' ? 'warning' : 'destructive'} className="px-4 py-1.5 text-sm">
+              {invoice.status}
             </Badge>
           </div>
         </div>
 
         {/* Bill To */}
-        <div className="mb-12">
-          <h3 className="text-2xl font-black uppercase tracking-tighter text-foreground border-b-2 border-border pb-4 mb-4">BILL TO</h3>
-          <div className="text-lg font-bold uppercase tracking-tighter text-muted-foreground space-y-2">
-            <p className="text-3xl font-black text-foreground">{mockInvoice.client.name}</p>
-            <p>{mockInvoice.client.company}</p>
-            <p>{mockInvoice.client.address}</p>
-            <p>{mockInvoice.client.email}</p>
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 border-b border-border pb-2">Bill To</h3>
+          <div className="text-sm font-medium text-muted-foreground space-y-1">
+            <p className="text-lg font-bold text-foreground">{invoice.clientName}</p>
+            <p>{invoice.clientEmail}</p>
           </div>
         </div>
 
         {/* Items */}
-        <div className="mb-12 overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="border-y-4 border-foreground bg-muted">
+        <div className="mb-8 overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-muted/50">
               <tr>
-                <th className="px-6 py-6 font-black text-2xl uppercase tracking-tighter text-foreground">DESCRIPTION</th>
-                <th className="px-6 py-6 font-black text-2xl uppercase tracking-tighter text-foreground text-right">AMOUNT</th>
+                <th className="px-4 py-4 font-semibold text-sm text-muted-foreground uppercase tracking-wider rounded-tl-lg rounded-bl-lg">Description</th>
+                <th className="px-4 py-4 font-semibold text-sm text-muted-foreground uppercase tracking-wider text-right rounded-tr-lg rounded-br-lg">Amount</th>
               </tr>
             </thead>
-            <tbody className="divide-y-2 divide-border">
-              {mockInvoice.items.map((item, index) => (
-                <tr key={index} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-6 py-8 font-bold text-xl uppercase tracking-tighter text-foreground">{item.description}</td>
-                  <td className="px-6 py-8 font-black text-2xl text-foreground text-right">₹{item.amount.toFixed(2)}</td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-border">
+              <tr className="hover:bg-muted/30 transition-colors">
+                <td className="px-4 py-6 font-medium text-foreground">{invoice.project || "Services Rendered"}</td>
+                <td className="px-4 py-6 font-semibold text-foreground text-right">₹{parseFloat(invoice.amount).toFixed(2)}</td>
+              </tr>
             </tbody>
           </table>
         </div>
 
         {/* Totals */}
-        <div className="flex justify-end border-t-4 border-foreground pt-12">
-          <div className="w-full max-w-lg space-y-6 text-xl font-bold uppercase tracking-tighter">
-            <div className="flex justify-between text-muted-foreground px-6">
-              <span>SUBTOTAL</span>
-              <span>₹{mockInvoice.subtotal.toFixed(2)}</span>
+        <div className="flex justify-end border-t border-border pt-8">
+          <div className="w-full max-w-sm space-y-4 text-sm font-medium">
+            <div className="flex justify-between text-muted-foreground px-4">
+              <span>Subtotal</span>
+              <span>₹{subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-muted-foreground px-6">
-              <span>GST ({mockInvoice.gstPercent}%)</span>
-              <span>₹{mockInvoice.gst.toFixed(2)}</span>
+            <div className="flex justify-between text-muted-foreground px-4">
+              <span>GST (18%)</span>
+              <span>₹{gst.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between items-center text-4xl font-black text-black bg-accent border-4 border-black p-8 mt-8">
-              <span>TOTAL</span>
-              <span>₹{mockInvoice.total.toFixed(2)}</span>
+            <div className="flex justify-between items-center text-xl font-bold text-foreground bg-muted/50 rounded-xl p-6 mt-6">
+              <span>Total</span>
+              <span>₹{parseFloat(invoice.amount).toFixed(2)}</span>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-24 pt-12 border-t-2 border-border text-center text-xl font-bold uppercase tracking-tighter text-muted-foreground">
-          <p>THANK YOU FOR YOUR BUSINESS.</p>
-          <p className="mt-2">DIRECT INQUIRIES TO {mockInvoice.company.email}</p>
+        <div className="mt-16 pt-8 border-t border-border text-center text-sm font-medium text-muted-foreground">
+          <p>Thank you for your business.</p>
+          <p className="mt-1">Direct inquiries to billing@payflowpro.com</p>
         </div>
       </Card>
     </div>

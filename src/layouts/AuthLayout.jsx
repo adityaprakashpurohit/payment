@@ -1,35 +1,29 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
-import MarqueeComponent from "react-fast-marquee";
-const Marquee = MarqueeComponent.default || MarqueeComponent;
 
 export const AuthLayout = () => {
   return (
-    <div className="flex min-h-screen bg-background cyber-grid-bg relative overflow-hidden">
-      {/* Left side branding with Marquee */}
-      <div className="hidden w-1/2 flex-col justify-center bg-accent border-r-2 border-border lg:flex relative overflow-hidden">
-        <div className="absolute inset-0 flex flex-col justify-between py-12 rotate-[-5deg] scale-110 origin-center">
-          <Marquee speed={80} gradient={false} className="overflow-hidden">
-            <h1 className="text-[12rem] font-black uppercase tracking-tighter text-black opacity-90 mx-8 leading-none">
-              PAYFLOW PRO
-            </h1>
-          </Marquee>
-          <Marquee speed={60} gradient={false} direction="right" className="overflow-hidden">
-            <h1 className="text-[12rem] font-black uppercase tracking-tighter text-black opacity-90 mx-8 leading-none">
-              PAYFLOW PRO
-            </h1>
-          </Marquee>
-          <Marquee speed={100} gradient={false} className="overflow-hidden">
-            <h1 className="text-[12rem] font-black uppercase tracking-tighter text-black opacity-90 mx-8 leading-none">
-              PAYFLOW PRO
-            </h1>
-          </Marquee>
+    <div className="flex min-h-screen bg-background relative overflow-hidden">
+      {/* Left side branding */}
+      <div className="hidden w-1/2 flex-col justify-center items-center bg-accent/5 lg:flex relative overflow-hidden">
+        <div className="text-center p-12 max-w-xl mx-auto">
+          <div className="inline-flex items-center justify-center p-4 bg-accent/10 rounded-3xl mb-8">
+            <div className="w-16 h-16 bg-accent rounded-2xl shadow-soft flex items-center justify-center">
+              <span className="text-white font-bold text-2xl">P</span>
+            </div>
+          </div>
+          <h1 className="text-5xl font-extrabold text-foreground tracking-tight mb-4">
+            Welcome to PayFlow Pro
+          </h1>
+          <p className="text-xl text-muted-foreground">
+            Manage your clients, invoices, and payments in one clean, simple platform.
+          </p>
         </div>
       </div>
 
       {/* Right side content */}
-      <div className="flex w-full flex-col justify-center p-8 lg:w-1/2 sm:p-12 xl:p-24 relative z-10 bg-background">
+      <div className="flex w-full flex-col justify-center p-8 lg:w-1/2 sm:p-12 xl:p-24 relative z-10 bg-background shadow-[-20px_0_40px_-20px_rgba(0,0,0,0.05)]">
         <div className="mx-auto w-full max-w-md">
           <motion.div
             initial={{ opacity: 0, x: 20 }}

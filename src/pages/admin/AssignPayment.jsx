@@ -7,12 +7,27 @@ import { Input } from "../../components/ui/Input";
 import { Select } from "../../components/ui/Select";
 import { Card } from "../../components/ui/Card";
 import toast from "react-hot-toast";
-import clientsData from "../../mock/clients.json";
 
 export const AssignPayment = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [clients, setClients] = useState([]);
   const [summary, setSummary] = useState({ subtotal: 0, gst: 0, total: 0 });
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const res = await fetch('/api/clients');
+        if (res.ok) {
+          const data = await res.json();
+          setClients(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch clients:", error);
+      }
+    };
+    fetchClients();
+  }, []);
 
   const {
     register,
@@ -47,35 +62,57 @@ export const AssignPayment = () => {
   };
 
   const clientOptions = [
-    { value: "", label: "SELECT A CLIENT..." },
-    ...clientsData.map(c => ({ value: c.id, label: `${c.name.toUpperCase()} (${c.company.toUpperCase()})` }))
+    { value: "", label: "Select a client..." },
+    ...clients.map(c => ({ value: c.id, label: `${c.name || c.fullName} (${c.company})` }))
   ];
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const selectedClient = clients.find(c => c.id === data.clientId);
+      const payload = {
+        ...data,
+        clientName: selectedClient ? (selectedClient.name || selectedClient.fullName) : "Unknown",
+        clientEmail: selectedClient ? selectedClient.email : "",
+        amount: summary.total
+      };
+
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        toast.success("Payment assigned successfully!");
+        navigate("/admin/payments");
+      } else {
+        toast.error("Failed to assign payment");
+      }
+    } catch (error) {
+      console.error("Assign payment error:", error);
+      toast.error("An error occurred");
+    } finally {
       setIsLoading(false);
-      toast.success("Payment assigned successfully!");
-      navigate("/admin/payments");
-    }, 1000);
+    }
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-12 pb-24">
-      <div className="py-12 border-b-2 border-border mb-12">
-        <h1 className="text-[clamp(3rem,8vw,6rem)] font-black uppercase tracking-tighter text-foreground leading-[0.85]">
-          ASSIGN<br/>PAYMENT
+    <div className="mx-auto max-w-7xl space-y-8 pb-24">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground">
+          Assign Payment
         </h1>
+        <p className="text-muted-foreground mt-2">Create a new invoice and assign it to a client.</p>
       </div>
 
-      <div className="grid gap-12 lg:grid-cols-3">
+      <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card className="p-8 md:p-12">
-            <form id="payment-form" onSubmit={handleSubmit(onSubmit)} className="space-y-16">
-              <div className="space-y-8">
-                <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground border-b-2 border-border pb-4">
-                  CLIENT DETAILS
+          <Card className="p-8">
+            <form id="payment-form" onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-foreground border-b border-border pb-4">
+                  Client Details
                 </h3>
                 
                 <div>
@@ -87,32 +124,32 @@ export const AssignPayment = () => {
                 </div>
               </div>
 
-              <div className="space-y-8">
-                <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground border-b-2 border-border pb-4">
-                  PROJECT & INVOICE
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-foreground border-b border-border pb-4">
+                  Project & Invoice
                 </h3>
                 
-                <div className="grid gap-12 sm:grid-cols-2">
+                <div className="grid gap-6 sm:grid-cols-2">
                   <div>
                     <Input
                       icon={Type}
-                      placeholder="PROJECT NAME"
-                      {...register("projectName", { required: "Project name is required" })}
-                      error={errors.projectName?.message}
+                      placeholder="Project Name"
+                      {...register("project", { required: "Project name is required" })}
+                      error={errors.project?.message}
                     />
                   </div>
 
                   <div className="relative">
                     <Input
                       icon={Receipt}
-                      placeholder="INVOICE NUMBER"
+                      placeholder="Invoice Number"
                       {...register("invoiceNumber", { required: "Invoice number is required" })}
                       error={errors.invoiceNumber?.message}
                     />
                     <button
                       type="button"
                       onClick={generateInvoiceNumber}
-                      className="absolute right-0 top-0 h-24 px-4 text-xl font-bold uppercase tracking-tighter text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs font-semibold rounded-lg text-accent bg-accent/10 hover:bg-accent hover:text-white transition-colors"
                     >
                       AUTO
                     </button>
@@ -121,25 +158,25 @@ export const AssignPayment = () => {
 
                 <div>
                   <textarea
-                    className="w-full min-h-[200px] border-0 border-b-2 border-border bg-transparent px-0 py-6 text-2xl font-bold uppercase tracking-tighter text-foreground transition-colors focus:border-accent focus:outline-none placeholder:text-muted resize-y"
-                    placeholder="DESCRIPTION..."
+                    className="w-full min-h-[150px] bg-input border border-border rounded-xl px-4 py-4 text-foreground transition-all duration-200 outline-none focus:border-accent focus:ring-4 focus:ring-accent/20 placeholder:text-muted-foreground resize-y"
+                    placeholder="Description..."
                     {...register("description")}
                   />
                 </div>
               </div>
 
-              <div className="space-y-8">
-                <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground border-b-2 border-border pb-4">
-                  PAYMENT TERMS
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-foreground border-b border-border pb-4">
+                  Payment Terms
                 </h3>
                 
-                <div className="grid gap-12 sm:grid-cols-3">
+                <div className="grid gap-6 sm:grid-cols-3">
                   <div>
                     <Input
                       icon={DollarSign}
                       type="number"
                       step="0.01"
-                      placeholder="AMOUNT"
+                      placeholder="Amount"
                       {...register("amount", { 
                         required: "Amount is required",
                         min: { value: 1, message: "Amount must be > 0" }
@@ -174,14 +211,14 @@ export const AssignPayment = () => {
         </div>
 
         <div>
-          <Card className="sticky top-32 p-8 lg:p-12">
-            <h3 className="text-4xl font-black uppercase tracking-tighter text-foreground mb-8 border-b-2 border-border pb-4">
-              SUMMARY
+          <Card className="sticky top-32 p-8">
+            <h3 className="text-xl font-semibold text-foreground mb-6 border-b border-border pb-4">
+              Summary
             </h3>
             
-            <div className="space-y-6 text-xl font-bold uppercase tracking-tighter">
+            <div className="space-y-4 text-base font-medium">
               <div className="flex justify-between text-muted-foreground">
-                <span>SUBTOTAL</span>
+                <span>Subtotal</span>
                 <span>₹{summary.subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
@@ -189,27 +226,27 @@ export const AssignPayment = () => {
                 <span>₹{summary.gst.toFixed(2)}</span>
               </div>
               
-              <div className="my-8 border-t-2 border-border"></div>
+              <div className="my-6 border-t border-border"></div>
               
-              <div className="flex justify-between text-4xl font-black text-foreground">
-                <span>TOTAL</span>
+              <div className="flex justify-between text-2xl font-bold text-foreground">
+                <span>Total</span>
                 <span>₹{summary.total.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="mt-12">
+            <div className="mt-8">
               <Button 
                 type="submit" 
                 form="payment-form" 
-                className="w-full h-24 text-3xl" 
+                className="w-full text-lg h-14" 
                 isLoading={isLoading}
               >
-                ASSIGN
+                Assign Payment
               </Button>
             </div>
             
-            <p className="mt-8 text-center text-lg font-bold uppercase tracking-tighter text-muted-foreground">
-              CLIENT WILL BE NOTIFIED VIA EMAIL.
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Client will be notified via email.
             </p>
           </Card>
         </div>
